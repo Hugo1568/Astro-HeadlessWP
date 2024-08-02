@@ -1,0 +1,39 @@
+---
+import Layout from "../../layouts/Layout.astro";
+
+const { slug } = Astro.params;
+let URL = import.meta.env.WP_REST_POSTS_URL;
+let res = await fetch(`${URL}?slug=${slug}&_embed`);
+let [post] = await res.json();
+
+// The getStaticPaths() is required for static Astro sites.
+// If using SSR, you will not need this function.
+export async function getStaticPaths() {
+    let data = await fetch(`${import.meta.env.WP_REST_POSTS_URL}`);
+    let posts = await data.json();
+
+    return posts.map((post) => ({
+        params: { slug: post.slug },
+        props: { post: post },
+    }));
+}
+---
+
+<Layout title={post.title.rendered}>
+    <article>
+        <img
+            src={post._embedded["wp:featuredmedia"]["0"].media_details.sizes
+                .medium.source_url}
+        />
+        <h1 set:html={post.title.rendered} />
+        <Fragment set:html={post.content.rendered} />
+    </article>
+    
+    <div class="text-center mt-8">
+        <a
+            href="/"
+            class="bg-gray-100 px-5 py-3 rounded-md hover:bg-gray-200 transition"
+            >← Back to Blog</a
+        >
+    </div>
+</Layout>
